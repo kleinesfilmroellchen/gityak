@@ -1,9 +1,23 @@
 let prText = "Yaks being shaved";
 let issueText = "Yak stack";
+let skeleyak = "Skeleyak";
 
 const serenityUAMatcher = /SerenityOS/gi;
 
-window.addEventListener("load", () => {
+// listen for a bunch of stuff, fml
+window.addEventListener("load", rewritePage);
+// hacks, hacks, hacks
+// doesn't catch GitHubs ajax reload, whatever the fuck that does
+window.history.pushState = new Proxy(window.history.pushState, {
+  apply: (target, thisArg, argArray) => {
+    rewritePage();
+    return target.apply(thisArg, argArray);
+  },
+});
+window.onhashchange = rewritePage;
+window.onpopstate = rewritePage;
+
+function rewritePage() {
   const taskTexts = document.querySelectorAll(
     '[data-target="tracked-issues-progress.label"]'
   );
@@ -20,12 +34,31 @@ window.addEventListener("load", () => {
     prText = "\u{10CD01}";
     // YAKSTACK (U+10CD90)
     issueText = "\u{10CD90}";
+    // SKELEYAK (U+10CD14)
+    skeleyak = "\u{10CD14}";
+  }
+  let element;
+  if ((element = document.querySelector('a[href="/pulls"]')))
+    element.innerHTML = prText;
+  if ((element = document.querySelector('a[href="/issues"]')))
+    element.innerHTML = issueText;
+
+  if ((element = document.querySelector('span[data-content="Pull requests"]')))
+    element.innerHTML = prText;
+  if ((element = document.querySelector('span[data-content="Issues"]')))
+    element.innerHTML = issueText;
+
+  const html = document.querySelector("html");
+  const walker = document.createTreeWalker(html, NodeFilter.SHOW_TEXT);
+  let node;
+  while ((node = walker.nextNode())) {
+    node.nodeValue = node.nodeValue.replaceAll(/\bstale\b/gi, skeleyak);
+    node.nodeValue = node.nodeValue.replaceAll(/\bissues\b/gi, issueText);
   }
 
-  document.querySelector('a[href="/pulls"]').innerHTML = prText;
-  document.querySelector('a[href="/issues"]').innerHTML = issueText;
-
-  document.querySelector('span[data-content="Pull requests"]').innerHTML =
-    prText;
-  document.querySelector('span[data-content="Issues"]').innerHTML = issueText;
-});
+  for (let div of document.querySelectorAll("div")) {
+    if (div.innerHTML === "stale") {
+      div.innerHTML = skeleyak;
+    }
+  }
+}
