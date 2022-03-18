@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "GitYak",
+  "version": "0.1",
+  "content_scripts": [
+    {
+      "js": ["content.js"],
+      "matches": ["http://github.com/*", "https://github.com/*"]
+    }
+  ]
+}
